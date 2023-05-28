@@ -1,11 +1,14 @@
 package Util
 
 import org.lwjgl.system.MemoryUtil
+import java.io.BufferedReader
 import java.io.InputStream
+import java.io.InputStreamReader
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
 import java.nio.charset.StandardCharsets
 import java.util.*
+import kotlin.collections.ArrayList
 
 class Utils {
 
@@ -36,9 +39,20 @@ class Utils {
         }
 
         fun readAllLines(fileName: String): List<String> {
-            var list: List<String> = ArrayList<String>()
-            //try(BufferedReader br = BufferedReader(InputStreamReader(Class.forName(Utils.class.getName))))
-            return list
+            var list:ArrayList<String> = ArrayList()
+            var res = Utils::class.java.getResourceAsStream(fileName)!!
+            var br = res.bufferedReader()
+            try {
+                var line:String?
+                while(true) {
+                    line = br?.readLine()
+                    if(line == null) break
+                    list!!.add(line)
+                }
+            } catch(e:Exception) {
+                e.printStackTrace()
+            }
+            return list!!
         }
     }
 }

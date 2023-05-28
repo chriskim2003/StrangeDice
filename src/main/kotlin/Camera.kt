@@ -17,13 +17,14 @@ class Camera {
 
     fun movePosition(x:Float, y:Float, z:Float) {
         if(z!=0f) {
-            position.x += (Math.sin(Math.toRadians(rotation.y.toDouble()-90)) * -1f * z).toFloat()
-            position.z += (Math.sin(Math.toRadians(rotation.y.toDouble()-90)) * z).toFloat()
+            position.x += (Math.sin(Math.toRadians(rotation.y.toDouble())) * -1f * z).toFloat()
+            position.z += (Math.cos(Math.toRadians(rotation.y.toDouble())) * z).toFloat()
         }
         if(x!=0f) {
             position.x += (Math.sin(Math.toRadians(rotation.y.toDouble()-90)) * -1f * x).toFloat()
-            position.z += (Math.sin(Math.toRadians(rotation.y.toDouble()-90)) * x).toFloat()
+            position.z += (Math.cos(Math.toRadians(rotation.y.toDouble()-90)) * x).toFloat()
         }
+        position.y += y
     }
 
     fun setPosition(x:Float, y:Float, z:Float) {

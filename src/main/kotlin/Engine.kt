@@ -1,6 +1,7 @@
 
 import Entity.Entity
 import Entity.Texture
+import Entity.UseShape
 import Util.Object
 import Util.Render
 import org.joml.Matrix4f
@@ -36,10 +37,13 @@ class Engine {
     private var renderer:Render? = null
     private var loader:Object? = null
 
-    private var entity: Entity? = null
+    private var entities = ArrayList<Entity>()
+
+    private var mouse: MouseInput? = null
+    private val CAMERA_MOVE_SPEED = 0.05f
 
     private var camera: Camera? = null
-    private var cameraInk: Vector3f = Vector3f(0f, 1.2f, 0f)
+    private var cameraInk: Vector3f = Vector3f(0f, 0f, 0f)
 
     private fun init() {
         errorCallback = glfwSetErrorCallback(GLFWErrorCallback.createPrint(System.err))
@@ -60,7 +64,7 @@ class Engine {
         keyCallback = glfwSetKeyCallback(window!!, object : GLFWKeyCallback() {
             override fun invoke(window: Long, key: Int, scancode: Int, action: Int, mods: Int) {
                 if(key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
-                    glfwSetWindowShouldClose(window, false)
+                    glfwSetWindowShouldClose(window, true)
                 }
             }
         })
@@ -74,6 +78,8 @@ class Engine {
         renderer = Render()
         loader = Object()
 
+        mouse = MouseInput()
+
         camera = Camera()
 
         glfwMakeContextCurrent(window!!)
@@ -84,68 +90,44 @@ class Engine {
     }
 
     private fun setup() {
+        mouse!!.init()
         renderer!!.init()
 
-        val vertices = floatArrayOf(
-            -0.5f, 0.5f, 0.5f,
-            -0.5f, -0.5f, 0.5f,
-            0.5f, -0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-            -0.5f, 0.5f, -0.5f,
-            0.5f, 0.5f, -0.5f,
-            -0.5f, -0.5f, -0.5f,
-            0.5f, -0.5f, -0.5f,
-            -0.5f, 0.5f, -0.5f,
-            0.5f, 0.5f, -0.5f,
-            -0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-            0.5f, -0.5f, 0.5f,
-            -0.5f, 0.5f, 0.5f,
-            -0.5f, -0.5f, 0.5f,
-            -0.5f, -0.5f, -0.5f,
-            0.5f, -0.5f, -0.5f,
-            -0.5f, -0.5f, 0.5f,
-            0.5f, -0.5f, 0.5f
-        )
-        val textureCoords = floatArrayOf(
-            0.0f, 0.0f,
-            0.0f, 0.5f,
-            0.5f, 0.5f,
-            0.5f, 0.0f,
-            0.0f, 0.0f,
-            0.5f, 0.0f,
-            0.0f, 0.5f,
-            0.5f, 0.5f,
-            0.0f, 0.5f,
-            0.5f, 0.5f,
-            0.0f, 1.0f,
-            0.5f, 1.0f,
-            0.0f, 0.0f,
-            0.0f, 0.5f,
-            0.5f, 0.0f,
-            0.5f, 0.5f,
-            0.5f, 0.0f,
-            1.0f, 0.0f,
-            0.5f, 0.5f,
-            1.0f, 0.5f
-        )
-        val indices = intArrayOf(
-            0, 1, 3, 3, 1, 2,
-            8, 10, 11, 9, 8, 11,
-            12, 13, 7, 5, 12, 7,
-            14, 15, 6, 4, 14, 6,
-            16, 18, 19, 17, 16, 19,
-            4, 6, 7, 5, 4, 7
-        )
 
-        var model = loader!!.loadModel(vertices, textureCoords, indices)
-        model!!.setTexture(Texture(loader!!.loadTexture("textures/grassblock.png")))
-        entity = Entity(model, Vector3f(0F, 0F, -5F), Vector3f(0F, 0F, 0F), 1F)
+
+        var couch = loader!!.loadOBJModel("/models/couch.obj")
+        couch!!.setTexture(Texture(loader!!.loadTexture("/marble.png")))
+        entities.add(Entity(couch, Vector3f(0F, -1F, -2F), Vector3f(0F, 0F, 0F), 0.001F, UseShape.SQUARE))
+
+        var bunny = loader!!.loadOBJModel("/models/bunny.obj")
+        bunny!!.setTexture(Texture(loader!!.loadTexture("/grassblock.png")))
+        entities.add(Entity(bunny, Vector3f(0F, -0.5F, -2F), Vector3f(0F, 0F, 0F), 3F, UseShape.TRIANGLE))
+
+        var airboat = loader!!.loadOBJModel("/models/airboat.obj")
+        airboat!!.setTexture(Texture(loader!!.loadTexture("/marble.png")))
+        entities.add(Entity(airboat, Vector3f(0f, 2f, -3f), Vector3f(0f, 0f, 0f), 0.1f, UseShape.SQUARE))
     }
 
     fun input() {
+        mouse!!.input()
 
+        cameraInk.set(0f, 0f, 0f)
+
+        if(glfwGetKey(window!!, GLFW_KEY_A) == GLFW_PRESS) {
+            cameraInk.x = -1f
+        }
+
+        if(glfwGetKey(window!!, GLFW_KEY_D) == GLFW_PRESS) {
+            cameraInk.x = 1f
+        }
+
+        if(glfwGetKey(window!!, GLFW_KEY_W) == GLFW_PRESS) {
+            cameraInk.z = -1f
+        }
+
+        if(glfwGetKey(window!!, GLFW_KEY_S) == GLFW_PRESS) {
+            cameraInk.z = 1f
+        }
     }
 
     private var inited = false
@@ -154,7 +136,6 @@ class Engine {
 
         while (!glfwWindowShouldClose(window!!)) {
             GL11.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
 
             if(!inited) {
                 GL11.glClearColor(0f, 0f, 0f, 0f)
@@ -165,10 +146,19 @@ class Engine {
                 inited = true;
             }
 
-            camera?.movePosition(cameraInk.x, cameraInk.y, cameraInk.z)
-            entity!!.incRotation(2f, 2f, 0f)
+            input()
 
-            renderer!!.render(entity!!, camera!!)
+            if(mouse!!.rightButtonPress) {
+                var rotvec = mouse!!.displVec
+                camera!!.moveRotation(rotvec.x * 0.2f, rotvec.y * 0.2f, 0f)
+            }
+            camera?.movePosition(cameraInk.x * CAMERA_MOVE_SPEED, cameraInk.y * CAMERA_MOVE_SPEED, cameraInk.z * CAMERA_MOVE_SPEED)
+
+            for(entity in entities) {
+                renderer!!.processEntity(entity)
+            }
+
+            renderer!!.render(camera!!)
 
             glfwSwapBuffers(window!!)
             glfwPollEvents()
